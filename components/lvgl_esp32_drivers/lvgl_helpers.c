@@ -17,6 +17,7 @@
 #include "lvgl_i2c_conf.h"
 
 #include "driver/i2c.h"
+#include "driver/spi_common_internal.h"
 
 #include "lvgl/src/lv_core/lv_refr.h"
 
@@ -221,7 +222,16 @@ bool lvgl_spi_driver_init(int host,
     };
 
     ESP_LOGI(TAG, "Initializing SPI bus...");
-    esp_err_t ret = spi_bus_initialize(host, &buscfg, dma_channel);
+    bool spiInUse = spicommon_periph_in_use(host);
+    esp_err_t ret = ESP_OK;
+    if (spiInUse)
+    {
+        ESP_LOGI(TAG, "SPI bus is been used. skip initializing.");
+    }
+    else
+    {
+        ret = spi_bus_initialize(host, &buscfg, dma_channel);
+    }
     assert(ret == ESP_OK);
 
     return ESP_OK != ret;
